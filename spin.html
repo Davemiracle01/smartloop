@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smartloop — Spin & Win</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#080c0a;--surface:#0f1710;--card:#111a13;--border:#1e2e20;--accent:#00e67a;--accent-dim:#00b85f;--accent-glow:rgba(0,230,122,0.15);--text:#e8f0ea;--muted:#6b7f6e;--danger:#ff4d4d;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,230,122,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,122,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+    .layout{display:flex;min-height:100vh;position:relative;z-index:1;}
+    .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;}
+    .sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-0.5px;color:var(--text);display:flex;align-items:center;gap:8px;padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+    .sidebar-logo span{color:var(--accent);}
+    .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+    .nav-section{padding:4px 12px;margin-bottom:4px;}
+    .nav-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:0 8px;margin-bottom:6px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:8px;font-size:14px;color:var(--muted);text-decoration:none;transition:all 0.15s;}
+    .nav-item:hover{background:var(--card);color:var(--text);}
+    .nav-item.active{background:var(--accent-glow);color:var(--accent);}
+    .nav-item .icon{font-size:16px;width:20px;text-align:center;}
+    .main{flex:1;padding:32px 36px;overflow:auto;display:flex;flex-direction:column;align-items:center;}
+    .page-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;text-align:center;}
+    .page-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px;text-align:center;}
+    .page-sub{font-size:14px;color:var(--muted);margin-top:6px;font-weight:300;margin-bottom:40px;text-align:center;}
+
+    .spin-container{
+      width: 100%;
+      max-width: 500px;
+    }
+
+    /* WHEEL */
+    .wheel-wrap{
+      position:relative;
+      width:280px;
+      height:280px;
+      margin:0 auto 32px;
+    }
+
+    .wheel {
+      width:100%;height:100%;
+      border-radius:50%;
+      border: 4px solid var(--border);
+      position:relative;
+      overflow:hidden;
+      transition:transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+      box-shadow: 0 0 40px rgba(0,230,122,0.1), 0 0 0 8px var(--surface);
+    }
+
+    .wheel-segment {
+      position:absolute;
+      width:50%;height:50%;
+      transform-origin:100% 100%;
+      display:flex;
+      align-items:center;
+      padding-left:16px;
+    }
+
+    .seg-0{background:rgba(0,230,122,0.2);transform:rotate(0deg);}
+    .seg-1{background:rgba(0,230,122,0.1);transform:rotate(45deg);}
+    .seg-2{background:rgba(0,230,122,0.2);transform:rotate(90deg);}
+    .seg-3{background:rgba(0,230,122,0.1);transform:rotate(135deg);}
+    .seg-4{background:rgba(0,230,122,0.2);transform:rotate(180deg);}
+    .seg-5{background:rgba(0,230,122,0.1);transform:rotate(225deg);}
+    .seg-6{background:rgba(0,230,122,0.2);transform:rotate(270deg);}
+    .seg-7{background:rgba(0,230,122,0.1);transform:rotate(315deg);}
+
+    .seg-text{
+      font-family:'DM Mono',monospace;
+      font-size:10px;
+      color:var(--accent);
+      font-weight:500;
+      transform:rotate(-45deg) translateX(-8px);
+      white-space:nowrap;
+    }
+
+    .wheel-center{
+      position:absolute;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      width:48px;height:48px;
+      border-radius:50%;
+      background:var(--bg);
+      border:3px solid var(--accent);
+      display:flex;align-items:center;justify-content:center;
+      font-size:20px;
+      z-index:2;
+      box-shadow:0 0 20px rgba(0,230,122,0.3);
+    }
+
+    .wheel-pointer{
+      position:absolute;
+      top:-16px;left:50%;
+      transform:translateX(-50%);
+      width:0;height:0;
+      border-left:10px solid transparent;
+      border-right:10px solid transparent;
+      border-top:20px solid var(--accent);
+      filter:drop-shadow(0 0 6px var(--accent));
+      z-index:3;
+    }
+
+    /* FORM */
+    .spin-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .spin-header{padding:18px 22px;border-bottom:1px solid var(--border);}
+    .spin-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+    .spin-body{padding:24px;}
+    .field-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    label{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+    input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-family:'DM Mono',monospace;font-size:14px;letter-spacing:1px;text-transform:uppercase;outline:none;transition:all 0.2s;}
+    input::placeholder{color:var(--muted);text-transform:none;}
+    input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+    .btn-spin{width:100%;padding:14px;background:var(--accent);color:#040a06;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:4px;}
+    .btn-spin:hover{background:var(--accent-dim);box-shadow:0 4px 24px rgba(0,230,122,0.35);transform:translateY(-1px);}
+    .btn-spin:active{transform:translateY(0);}
+    .btn-spin:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+    .result-box{
+      margin-top:16px;padding:14px 16px;
+      background:var(--accent-glow);border:1px solid rgba(0,230,122,0.2);
+      border-radius:10px;text-align:center;
+      font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--accent);
+      display:none;
+    }
+
+    .prizes-note{margin-top:16px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center;line-height:1.8;}
+
+    @media(max-width:700px){.sidebar{display:none;}.main{padding:20px 16px;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="logo-dot"></div>Smart<span>loop</span></div>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">⬡</span> Dashboard</a>
+      <a href="earnings.html" class="nav-item"><span class="icon">📈</span> Earnings</a>
+      <a href="spin.html" class="nav-item active"><span class="icon">🎯</span> Spin & Win</a>
+    </div>
+    <div class="nav-section" style="margin-top:8px">
+      <div class="nav-label">Finance</div>
+      <a href="deposit.html" class="nav-item"><span class="icon">⬇</span> Deposit</a>
+      <a href="withdraw.html" class="nav-item"><span class="icon">⬆</span> Withdraw</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-tag">Bonus Feature</div>
+    <h1 class="page-title">Spin to Win</h1>
+    <p class="page-sub">Enter your claim code and try your luck</p>
+
+    <div class="spin-container">
+      <!-- WHEEL -->
+      <div class="wheel-wrap">
+        <div class="wheel-pointer"></div>
+        <div class="wheel" id="wheel">
+          <div class="wheel-segment seg-0"><span class="seg-text">KES 50</span></div>
+          <div class="wheel-segment seg-1"><span class="seg-text">KES 100</span></div>
+          <div class="wheel-segment seg-2"><span class="seg-text">KES 200</span></div>
+          <div class="wheel-segment seg-3"><span class="seg-text">TRY AGAIN</span></div>
+          <div class="wheel-segment seg-4"><span class="seg-text">KES 500</span></div>
+          <div class="wheel-segment seg-5"><span class="seg-text">KES 50</span></div>
+          <div class="wheel-segment seg-6"><span class="seg-text">KES 150</span></div>
+          <div class="wheel-segment seg-7"><span class="seg-text">KES 75</span></div>
+        </div>
+        <div class="wheel-center">🎯</div>
+      </div>
+
+      <!-- FORM -->
+      <div class="spin-card">
+        <div class="spin-header"><div class="spin-title">Enter Claim Code</div></div>
+        <div class="spin-body">
+          <div class="field-group">
+            <label for="claimCode">Your Code</label>
+            <input type="text" id="claimCode" placeholder="Enter your code here" />
+          </div>
+          <button class="btn-spin" id="spinBtn" onclick="doSpin()">🎯 Spin the Wheel</button>
+          <div class="result-box" id="resultBox"></div>
+          <div class="prizes-note">
+            Prizes: KES 50 · KES 75 · KES 100 · KES 150 · KES 200 · KES 500<br>
+            Each code can only be used once. Results are final.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  let spinning = false;
+  let totalDeg = 0;
+
+  function doSpin() {
+    const code = document.getElementById('claimCode').value.trim();
+    if (!code) {
+      document.getElementById('claimCode').focus();
+      return;
+    }
+    if (spinning) return;
+    spinning = true;
+
+    const btn = document.getElementById('spinBtn');
+    const result = document.getElementById('resultBox');
+    btn.disabled = true;
+    result.style.display = 'none';
+
+    const extraSpins = 5 + Math.floor(Math.random() * 4);
+    const landingDeg = Math.floor(Math.random() * 360);
+    totalDeg += extraSpins * 360 + landingDeg;
+
+    const wheel = document.getElementById('wheel');
+    wheel.style.transition = 'transform 3.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+    wheel.style.transform = `rotate(${totalDeg}deg)`;
+
+    setTimeout(() => {
+      spinning = false;
+      btn.disabled = false;
+      result.style.display = 'block';
+      result.textContent = '🎉 Feature coming soon — your code has been noted!';
+    }, 3700);
+  }
+</script>
+</body>
+</html>

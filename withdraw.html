@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smartloop — Withdraw</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script defer type="module" src="script.js"></script>
+  <style>
+    :root { --bg:#080c0a;--surface:#0f1710;--card:#111a13;--border:#1e2e20;--accent:#00e67a;--accent-dim:#00b85f;--accent-glow:rgba(0,230,122,0.15);--text:#e8f0ea;--muted:#6b7f6e;--danger:#ff4d4d; }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,230,122,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,122,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+    .layout{display:flex;min-height:100vh;position:relative;z-index:1;}
+    .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;}
+    .sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-0.5px;color:var(--text);display:flex;align-items:center;gap:8px;padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+    .sidebar-logo span{color:var(--accent);}
+    .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+    .nav-section{padding:4px 12px;margin-bottom:4px;}
+    .nav-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:0 8px;margin-bottom:6px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:8px;font-size:14px;color:var(--muted);text-decoration:none;transition:all 0.15s;}
+    .nav-item:hover{background:var(--card);color:var(--text);}
+    .nav-item.active{background:var(--accent-glow);color:var(--accent);}
+    .nav-item .icon{font-size:16px;width:20px;text-align:center;}
+    .main{flex:1;padding:32px 36px;overflow:auto;}
+    .page-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+    .page-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px;}
+    .page-sub{font-size:14px;color:var(--muted);margin-top:6px;font-weight:300;margin-bottom:32px;}
+    .content-grid{display:grid;grid-template-columns:1fr 320px;gap:24px;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .card-header{padding:18px 22px;border-bottom:1px solid var(--border);}
+    .card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+    .card-body{padding:24px;}
+    .field-group{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
+    label{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+    input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:13px 16px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+    input::placeholder{color:var(--muted);}
+    input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+    .btn-primary{width:100%;padding:14px;background:var(--accent);color:#040a06;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+    .btn-primary:hover{background:var(--accent-dim);box-shadow:0 4px 24px rgba(0,230,122,0.35);transform:translateY(-1px);}
+    .balance-display{background:linear-gradient(135deg,#004d2a,#00261a);border:1px solid rgba(0,230,122,0.3);border-radius:14px;padding:24px;margin-bottom:24px;text-align:center;}
+    .balance-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+    .balance-amount{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:var(--text);}
+    .balance-sub{font-size:12px;color:var(--muted);margin-top:6px;}
+    .method-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+    .method-btn{padding:12px;background:var(--card);border:2px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;transition:all 0.2s;}
+    .method-btn:hover{border-color:rgba(0,230,122,0.4);}
+    .method-btn.selected{border-color:var(--accent);background:var(--accent-glow);}
+    .method-icon{font-size:20px;margin-bottom:4px;}
+    .method-name{font-size:12px;font-weight:600;}
+    .warning-box{background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.2);border-radius:10px;padding:14px 16px;margin-top:16px;}
+    .warning-title{font-family:'DM Mono',monospace;font-size:10px;color:var(--danger);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
+    .warning-box p{font-size:12px;color:var(--text);line-height:1.6;}
+    .toast{position:fixed;bottom:32px;right:32px;background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);padding:14px 20px;border-radius:10px;font-size:13px;color:var(--text);max-width:280px;transform:translateY(20px);opacity:0;transition:all 0.3s ease;z-index:100;}
+    .toast.show{opacity:1;transform:translateY(0);}
+    .toast.error{border-left-color:var(--danger);}
+    @media(max-width:700px){.sidebar{display:none;}.main{padding:20px 16px;}.content-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="logo-dot"></div>Smart<span>loop</span></div>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">⬡</span> Dashboard</a>
+      <a href="earnings.html" class="nav-item"><span class="icon">📈</span> Earnings</a>
+      <a href="spin.html" class="nav-item"><span class="icon">🎯</span> Spin & Win</a>
+    </div>
+    <div class="nav-section" style="margin-top:8px">
+      <div class="nav-label">Finance</div>
+      <a href="deposit.html" class="nav-item"><span class="icon">⬇</span> Deposit</a>
+      <a href="withdraw.html" class="nav-item active"><span class="icon">⬆</span> Withdraw</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-tag">Finance</div>
+    <h1 class="page-title">Withdraw Funds</h1>
+    <p class="page-sub">Request a payout to your M-Pesa or bank account</p>
+
+    <div class="content-grid">
+      <div>
+        <div class="balance-display">
+          <div class="balance-label">Available Balance</div>
+          <div class="balance-amount">KES 0.00</div>
+          <div class="balance-sub">Earnings accumulate daily after plan approval</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Withdrawal Request</div></div>
+          <div class="card-body">
+            <div style="margin-bottom:18px">
+              <label style="display:block;margin-bottom:8px">Payout Method</label>
+              <div class="method-row">
+                <div class="method-btn selected" onclick="selectMethod(this)">
+                  <div class="method-icon">📱</div>
+                  <div class="method-name">M-Pesa</div>
+                </div>
+                <div class="method-btn" onclick="selectMethod(this)">
+                  <div class="method-icon">🏦</div>
+                  <div class="method-name">Bank Transfer</div>
+                </div>
+              </div>
+            </div>
+
+            <form id="withdrawForm">
+              <div class="field-group">
+                <label for="amount">Amount (KES)</label>
+                <input type="number" id="amount" placeholder="Minimum: KES 500" required min="500" />
+              </div>
+              <div class="field-group">
+                <label for="account">M-Pesa / Bank Account Number</label>
+                <input type="text" id="account" placeholder="07XX XXX XXX or account number" required />
+              </div>
+              <button type="submit" class="btn-primary">Request Withdrawal →</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Withdrawal Rules</div></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="font-size:18px;flex-shrink:0">⏰</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:3px">Processing Time</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.5">Withdrawals are processed within 24–48 hours on business days.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="font-size:18px;flex-shrink:0">💰</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:3px">Minimum Amount</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.5">The minimum withdrawal is KES 500.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div style="font-size:18px;flex-shrink:0">✅</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:3px">Plan Must Be Active</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.5">You can only withdraw earnings from an approved, active investment plan.</div>
+              </div>
+            </div>
+
+            <div class="warning-box">
+              <div class="warning-title">⚠ Important</div>
+              <p>Ensure your account number is correct before submitting. Incorrect details may result in permanent loss of funds.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+  window.showToast = function(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 3500);
+  };
+  function selectMethod(el) {
+    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+</script>
+</body>
+</html>

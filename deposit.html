@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smartloop — Deposit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script defer type="module" src="script.js"></script>
+  <style>
+    :root {
+      --bg: #080c0a; --surface: #0f1710; --card: #111a13; --border: #1e2e20;
+      --accent: #00e67a; --accent-dim: #00b85f; --accent-glow: rgba(0,230,122,0.15);
+      --text: #e8f0ea; --muted: #6b7f6e; --danger: #ff4d4d;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+    body::before {
+      content:''; position:fixed; inset:0;
+      background-image: linear-gradient(rgba(0,230,122,0.025) 1px,transparent 1px), linear-gradient(90deg,rgba(0,230,122,0.025) 1px,transparent 1px);
+      background-size:40px 40px; pointer-events:none; z-index:0;
+    }
+    .layout { display:flex; min-height:100vh; position:relative; z-index:1; }
+    .sidebar {
+      width:220px; flex-shrink:0; background:var(--surface);
+      border-right:1px solid var(--border); display:flex; flex-direction:column; padding:24px 0;
+    }
+    .sidebar-logo {
+      font-family:'Syne',sans-serif; font-weight:800; font-size:20px; letter-spacing:-0.5px;
+      color:var(--text); display:flex; align-items:center; gap:8px;
+      padding:0 20px 24px; border-bottom:1px solid var(--border); margin-bottom:16px;
+    }
+    .sidebar-logo span { color:var(--accent); }
+    .logo-dot { width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 10px var(--accent); animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.8)} }
+    .nav-section { padding:4px 12px; margin-bottom:4px; }
+    .nav-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; padding:0 8px; margin-bottom:6px; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:8px; font-size:14px; color:var(--muted); text-decoration:none; transition:all 0.15s; }
+    .nav-item:hover { background:var(--card); color:var(--text); }
+    .nav-item.active { background:var(--accent-glow); color:var(--accent); }
+    .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+    .main { flex:1; padding:32px 36px; overflow:auto; }
+    .page-header { margin-bottom:32px; }
+    .page-tag { font-family:'DM Mono',monospace; font-size:11px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+    .page-title { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; letter-spacing:-1px; }
+    .page-sub { font-size:14px; color:var(--muted); margin-top:6px; font-weight:300; }
+    .content-grid { display:grid; grid-template-columns:1fr 360px; gap:24px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+    .card-header { padding:18px 22px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .card-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; }
+    .card-body { padding:24px; }
+
+    /* MPESA BANNER */
+    .mpesa-banner {
+      background: linear-gradient(135deg, #004d2a 0%, #00261a 100%);
+      border: 1px solid rgba(0,230,122,0.3);
+      border-radius: 14px;
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .mpesa-left {}
+    .mpesa-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px; }
+    .mpesa-number { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; letter-spacing:1px; color:var(--text); }
+    .mpesa-hint { font-size:12px; color:var(--muted); margin-top:4px; }
+    .mpesa-logo {
+      width: 56px; height: 56px;
+      background: rgba(0,230,122,0.1);
+      border: 1px solid rgba(0,230,122,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    /* PLANS */
+    .plans-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+    .plan-option {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .plan-option:hover { border-color: rgba(0,230,122,0.5); }
+    .plan-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .plan-option.selected::before {
+      content: '✓';
+      position: absolute;
+      top: 10px; right: 12px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .plan-amount-label { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:4px; }
+    .plan-rate-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--accent); margin-bottom:3px; }
+    .plan-days-label { font-size:11px; color:var(--muted); }
+    .plan-total { font-size:11px; color:var(--text); margin-top:6px; font-weight:500; }
+
+    /* FORM */
+    .field-group { display:flex; flex-direction:column; gap:6px; margin-bottom:18px; }
+    label { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; }
+    select, input {
+      width:100%; background:var(--card); border:1px solid var(--border);
+      color:var(--text); padding:13px 16px; border-radius:10px;
+      font-family:'DM Sans',sans-serif; font-size:15px; outline:none;
+      transition:border-color 0.2s,box-shadow 0.2s;
+    }
+    select option { background:var(--card); }
+    input::placeholder { color:var(--muted); }
+    input:focus, select:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
+
+    .btn-primary {
+      width:100%; padding:14px; background:var(--accent); color:#040a06;
+      border:none; border-radius:10px; font-family:'Syne',sans-serif; font-size:16px;
+      font-weight:700; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
+    }
+    .btn-primary::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 60%); }
+    .btn-primary:hover { background:var(--accent-dim); box-shadow:0 4px 24px rgba(0,230,122,0.35); transform:translateY(-1px); }
+    .btn-primary:active { transform:translateY(0); }
+
+    /* STEPS SIDE */
+    .steps-list { display:flex; flex-direction:column; gap:0; }
+    .step { display:flex; gap:16px; padding-bottom:24px; position:relative; }
+    .step:last-child { padding-bottom:0; }
+    .step:not(:last-child)::after {
+      content:''; position:absolute; left:16px; top:36px;
+      width:1px; height:calc(100% - 20px);
+      background:var(--border);
+    }
+    .step-num {
+      width:32px; height:32px; border-radius:50%;
+      background:var(--card); border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
+      color:var(--accent); flex-shrink:0;
+    }
+    .step-content {}
+    .step-title { font-size:14px; font-weight:600; margin-bottom:4px; }
+    .step-desc { font-size:12px; color:var(--muted); line-height:1.6; }
+
+    .info-box {
+      background:var(--accent-glow); border:1px solid rgba(0,230,122,0.2);
+      border-radius:10px; padding:14px 16px; margin-top:20px;
+    }
+    .info-box-title { font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+    .info-box p { font-size:12px; color:var(--text); line-height:1.6; }
+
+    .toast { position:fixed; bottom:32px; right:32px; background:var(--card); border:1px solid var(--border); border-left:3px solid var(--accent); padding:14px 20px; border-radius:10px; font-size:13px; color:var(--text); max-width:280px; transform:translateY(20px); opacity:0; transition:all 0.3s ease; z-index:100; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast.error { border-left-color:var(--danger); }
+
+    @media (max-width:1000px) { .content-grid { grid-template-columns:1fr; } }
+    @media (max-width:700px) { .sidebar{display:none;} .main{padding:20px 16px;} .plans-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="logo-dot"></div>Smart<span>loop</span></div>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">⬡</span> Dashboard</a>
+      <a href="earnings.html" class="nav-item"><span class="icon">📈</span> Earnings</a>
+      <a href="spin.html" class="nav-item"><span class="icon">🎯</span> Spin & Win</a>
+    </div>
+    <div class="nav-section" style="margin-top:8px">
+      <div class="nav-label">Finance</div>
+      <a href="deposit.html" class="nav-item active"><span class="icon">⬇</span> Deposit</a>
+      <a href="withdraw.html" class="nav-item"><span class="icon">⬆</span> Withdraw</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-tag">Finance</div>
+      <h1 class="page-title">Make a Deposit</h1>
+      <p class="page-sub">Choose a plan and submit your M-Pesa transaction code</p>
+    </div>
+
+    <div class="mpesa-banner">
+      <div class="mpesa-left">
+        <div class="mpesa-label">Send M-Pesa To</div>
+        <div class="mpesa-number">0113 297 734</div>
+        <div class="mpesa-hint">Copy number → Open M-Pesa → Send Money</div>
+      </div>
+      <div class="mpesa-logo">📱</div>
+    </div>
+
+    <div class="content-grid">
+      <!-- FORM -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Select Plan & Submit Code</div>
+        </div>
+        <div class="card-body">
+
+          <div style="margin-bottom:20px">
+            <label style="display:block;margin-bottom:10px">Choose Investment Plan</label>
+            <div class="plans-grid" id="plansGrid">
+              <div class="plan-option" data-value="1000" onclick="selectPlan(this)">
+                <div class="plan-amount-label">KES 1,000</div>
+                <div class="plan-rate-label">+KES 90/day</div>
+                <div class="plan-days-label">20-day cycle</div>
+                <div class="plan-total">Total return: KES 1,800</div>
+              </div>
+              <div class="plan-option" data-value="2300" onclick="selectPlan(this)">
+                <div class="plan-amount-label">KES 2,300</div>
+                <div class="plan-rate-label">+KES 118/day</div>
+                <div class="plan-days-label">35-day cycle</div>
+                <div class="plan-total">Total return: KES 4,130</div>
+              </div>
+              <div class="plan-option" data-value="3800" onclick="selectPlan(this)">
+                <div class="plan-amount-label">KES 3,800</div>
+                <div class="plan-rate-label">+KES 200/day</div>
+                <div class="plan-days-label">35-day cycle</div>
+                <div class="plan-total">Total return: KES 7,000</div>
+              </div>
+              <div class="plan-option" data-value="8000" onclick="selectPlan(this)">
+                <div class="plan-amount-label">KES 8,000</div>
+                <div class="plan-rate-label">+KES 305/day</div>
+                <div class="plan-days-label">49-day cycle</div>
+                <div class="plan-total">Total return: KES 14,945</div>
+              </div>
+            </div>
+          </div>
+
+          <form id="depositForm">
+            <input type="hidden" id="plan" value="" />
+            <div class="field-group">
+              <label for="mpesaCode">M-Pesa Transaction Code</label>
+              <input type="text" id="mpesaCode" placeholder="e.g. SJK4X8F2AQ" required
+                style="font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase" />
+            </div>
+            <button type="submit" class="btn-primary" id="submitBtn" disabled>Submit Deposit →</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- STEPS -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">How It Works</div></div>
+          <div class="card-body">
+            <div class="steps-list">
+              <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                  <div class="step-title">Send via M-Pesa</div>
+                  <div class="step-desc">Open M-Pesa, select "Send Money", and transfer to <strong>0113 297 734</strong> the amount matching your chosen plan.</div>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                  <div class="step-title">Copy Transaction Code</div>
+                  <div class="step-desc">You'll receive an SMS confirmation with a transaction code like <strong>SJK4X8F2AQ</strong>. Copy it.</div>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                  <div class="step-title">Submit Here</div>
+                  <div class="step-desc">Select your plan above and paste the code. Your deposit will be confirmed by an admin within 24 hours.</div>
+                </div>
+              </div>
+              <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                  <div class="step-title">Start Earning</div>
+                  <div class="step-desc">Once approved, daily earnings begin immediately and accumulate in your balance.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-box">
+              <div class="info-box-title">⚡ Processing Time</div>
+              <p>Deposits are typically confirmed within 1–24 hours on business days. Contact support if not confirmed after 24hrs.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  window.showToast = function(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 3500);
+  };
+
+  function selectPlan(el) {
+    document.querySelectorAll('.plan-option').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('plan').value = el.dataset.value;
+    document.getElementById('submitBtn').disabled = false;
+  }
+</script>
+</body>
+</html>

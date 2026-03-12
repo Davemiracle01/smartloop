@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smartloop — Earnings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#080c0a;--surface:#0f1710;--card:#111a13;--border:#1e2e20;--accent:#00e67a;--accent-dim:#00b85f;--accent-glow:rgba(0,230,122,0.15);--text:#e8f0ea;--muted:#6b7f6e;--danger:#ff4d4d;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,230,122,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,122,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+    .layout{display:flex;min-height:100vh;position:relative;z-index:1;}
+    .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;}
+    .sidebar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-0.5px;color:var(--text);display:flex;align-items:center;gap:8px;padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+    .sidebar-logo span{color:var(--accent);}
+    .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+    .nav-section{padding:4px 12px;margin-bottom:4px;}
+    .nav-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:0 8px;margin-bottom:6px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:8px;font-size:14px;color:var(--muted);text-decoration:none;transition:all 0.15s;}
+    .nav-item:hover{background:var(--card);color:var(--text);}
+    .nav-item.active{background:var(--accent-glow);color:var(--accent);}
+    .nav-item .icon{font-size:16px;width:20px;text-align:center;}
+    .main{flex:1;padding:32px 36px;overflow:auto;}
+    .page-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+    .page-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px;}
+    .page-sub{font-size:14px;color:var(--muted);margin-top:6px;font-weight:300;margin-bottom:32px;}
+    .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;}
+    .stat-card.highlight{border-color:rgba(0,230,122,0.4);background:linear-gradient(135deg,var(--surface),rgba(0,230,122,0.05));}
+    .stat-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+    .stat-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.5px;}
+    .stat-value.green{color:var(--accent);}
+    .stat-change{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .card-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+    .card-body{padding:24px;}
+
+    /* BAR CHART */
+    .chart-container{height:180px;display:flex;align-items:flex-end;gap:6px;padding-bottom:8px;position:relative;}
+    .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
+    .chart-bar{
+      width:100%;border-radius:4px 4px 0 0;
+      background:var(--accent-glow);border:1px solid rgba(0,230,122,0.2);
+      transition:all 0.3s;cursor:pointer;position:relative;
+    }
+    .chart-bar:hover{background:rgba(0,230,122,0.25);border-color:var(--accent);}
+    .chart-bar.today{background:rgba(0,230,122,0.35);border-color:var(--accent);}
+    .chart-day{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;}
+    .chart-val{font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);}
+    .chart-divider{position:absolute;left:0;right:0;height:1px;background:var(--border);}
+
+    /* PLAN PROJECTION */
+    .projection-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px;}
+    .proj-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;}
+    .proj-plan{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:10px;}
+    .proj-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);}
+    .proj-row:last-child{border-bottom:none;}
+    .proj-key{font-size:12px;color:var(--muted);}
+    .proj-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);font-weight:500;}
+    .proj-val.green{color:var(--accent);}
+
+    /* COMING SOON OVERLAY */
+    .coming-soon{
+      position:relative;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:60px 24px;text-align:center;
+    }
+    .cs-icon{font-size:48px;margin-bottom:16px;}
+    .cs-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;}
+    .cs-sub{font-size:14px;color:var(--muted);line-height:1.6;max-width:320px;}
+    .cs-badge{margin-top:16px;display:inline-block;font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);border:1px solid var(--accent);padding:4px 14px;border-radius:20px;letter-spacing:1px;}
+
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+    @media(max-width:900px){.stats-row{grid-template-columns:1fr 1fr;}.two-col{grid-template-columns:1fr;}}
+    @media(max-width:700px){.sidebar{display:none;}.main{padding:20px 16px;}.stats-row{grid-template-columns:1fr;}.projection-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="logo-dot"></div>Smart<span>loop</span></div>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item"><span class="icon">⬡</span> Dashboard</a>
+      <a href="earnings.html" class="nav-item active"><span class="icon">📈</span> Earnings</a>
+      <a href="spin.html" class="nav-item"><span class="icon">🎯</span> Spin & Win</a>
+    </div>
+    <div class="nav-section" style="margin-top:8px">
+      <div class="nav-label">Finance</div>
+      <a href="deposit.html" class="nav-item"><span class="icon">⬇</span> Deposit</a>
+      <a href="withdraw.html" class="nav-item"><span class="icon">⬆</span> Withdraw</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-tag">Analytics</div>
+    <h1 class="page-title">Your Earnings</h1>
+    <p class="page-sub">Track your daily returns and investment performance</p>
+
+    <div class="stats-row">
+      <div class="stat-card highlight">
+        <div class="stat-label">Total Earned</div>
+        <div class="stat-value green">KES 0.00</div>
+        <div class="stat-change">Lifetime earnings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Today's Earnings</div>
+        <div class="stat-value">KES 0</div>
+        <div class="stat-change">No active plan</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Days Remaining</div>
+        <div class="stat-value">—</div>
+        <div class="stat-change">Invest to start</div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-bottom:24px">
+      <!-- CHART CARD -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">30-day Earnings Chart</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">DEMO DATA</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" id="barChart"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center;font-family:'DM Mono',monospace;">
+            Actual data will appear once your plan is active
+          </div>
+        </div>
+      </div>
+
+      <!-- PLAN STATUS -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Active Plan</div></div>
+        <div class="coming-soon">
+          <div class="cs-icon">📋</div>
+          <div class="cs-title">No Active Plan</div>
+          <div class="cs-sub">Deposit to activate an investment plan and start earning daily returns.</div>
+          <a href="deposit.html" class="cs-badge">INVEST NOW →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAN PROJECTIONS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Plan Projections</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">ALL PLANS</div>
+      </div>
+      <div class="card-body">
+        <div class="projection-grid">
+          <div class="proj-card">
+            <div class="proj-plan">KES 1,000 Plan</div>
+            <div class="proj-row"><span class="proj-key">Daily return</span><span class="proj-val green">KES 90</span></div>
+            <div class="proj-row"><span class="proj-key">Duration</span><span class="proj-val">20 days</span></div>
+            <div class="proj-row"><span class="proj-key">Total return</span><span class="proj-val green">KES 1,800</span></div>
+            <div class="proj-row"><span class="proj-key">Profit</span><span class="proj-val green">+KES 800</span></div>
+          </div>
+          <div class="proj-card">
+            <div class="proj-plan">KES 2,300 Plan</div>
+            <div class="proj-row"><span class="proj-key">Daily return</span><span class="proj-val green">KES 118</span></div>
+            <div class="proj-row"><span class="proj-key">Duration</span><span class="proj-val">35 days</span></div>
+            <div class="proj-row"><span class="proj-key">Total return</span><span class="proj-val green">KES 4,130</span></div>
+            <div class="proj-row"><span class="proj-key">Profit</span><span class="proj-val green">+KES 1,830</span></div>
+          </div>
+          <div class="proj-card">
+            <div class="proj-plan">KES 3,800 Plan</div>
+            <div class="proj-row"><span class="proj-key">Daily return</span><span class="proj-val green">KES 200</span></div>
+            <div class="proj-row"><span class="proj-key">Duration</span><span class="proj-val">35 days</span></div>
+            <div class="proj-row"><span class="proj-key">Total return</span><span class="proj-val green">KES 7,000</span></div>
+            <div class="proj-row"><span class="proj-key">Profit</span><span class="proj-val green">+KES 3,200</span></div>
+          </div>
+          <div class="proj-card">
+            <div class="proj-plan">KES 8,000 Plan</div>
+            <div class="proj-row"><span class="proj-key">Daily return</span><span class="proj-val green">KES 305</span></div>
+            <div class="proj-row"><span class="proj-key">Duration</span><span class="proj-val">49 days</span></div>
+            <div class="proj-row"><span class="proj-key">Total return</span><span class="proj-val green">KES 14,945</span></div>
+            <div class="proj-row"><span class="proj-key">Profit</span><span class="proj-val green">+KES 6,945</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Generate demo bar chart
+  const chart = document.getElementById('barChart');
+  const days = ['M','T','W','T','F','S','S'];
+  const heights = [35,55,40,70,65,80,50,45,60,75,55,65,80,70,45,55,60,75,50,65,70,80,55,60,70,65,75,80,60,90];
+  heights.forEach((h, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'chart-bar-wrap';
+    const bar = document.createElement('div');
+    bar.className = 'chart-bar' + (i === heights.length-1 ? ' today' : '');
+    bar.style.height = h + '%';
+    wrap.appendChild(bar);
+    chart.appendChild(wrap);
+  });
+</script>
+</body>
+</html>
